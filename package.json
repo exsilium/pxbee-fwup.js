@@ -1,0 +1,27 @@
+{
+  "name": "pxbee-fwup.js",
+  "version": "0.0.1",
+  "description": "Programmable XBee Application firmware updater OTW/OTA",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exsilium/pxbee-fwup.js.git"
+  },
+  "keywords": [
+    "xbee"
+  ],
+  "author": "Sten Feldman",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/exsilium/pxbee-fwup.js/issues"
+  },
+  "homepage": "https://github.com/exsilium/pxbee-fwup.js#readme",
+  "dependencies": {
+    "colors": "~1.1.2",
+    "commander": "~2.9.0",
+    "serialport": "~4.0.7"
+  }
+}
