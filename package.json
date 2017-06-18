@@ -22,6 +22,7 @@
   "dependencies": {
     "colors": "~1.1.2",
     "commander": "~2.9.0",
-    "serialport": "~4.0.7"
+    "serialport": "~4.0.7",
+    "xbee-api": "0.5.2"
   }
 }
