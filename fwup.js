@@ -27,6 +27,7 @@ program
   .version(VERSION)
   .option('-d, --device [devlink]', 'Device node [/dev/cu.usbserial]')
   .option('-b, --baudrate [rate]', 'Baud rate [9600]', '9600')
+  .option('-s, --skipInit', 'Skip Init (e.g. you know the module to be in the Bootloader menu)')
   .option('-B, --bypass', 'Go to bypass mode')
   .option('-F, --firmware <file>', 'Start Firmware Upgrade (NOT IMPLEMENTED)')
   .on('--help', function() {
@@ -39,9 +40,15 @@ program
   .parse(process.argv);
 
 if(program.device) {
+  console.log('************************************************************');
+  console.log('* Programmable XBee Firmware Upgrade Tool v' + require('./package.json').version + '           *');
+  console.log('************************************************************');
   console.log('Settings used:'.underline.green);
   console.log('  - ', program.device);
   console.log('  - ', program.baudrate);
+  if(program.skipInit) {
+    console.log('  -  Skipping Init');
+  }
   console.log('Action selected:'.underline.green);
   if(program.bypass) {
     console.log('  -  Bypass ');
@@ -78,65 +85,74 @@ if(program.device) {
   var myInterval;
 
   port.on('open', function() {
-    console.log("Port is open please reset within 5 seconds!".bold.green);
-    port.set({dtr:true, rts:false, brk:true}, function() {
-      myInterval = setInterval(function() {
-        port.write(nullData);
-        setTimeout(function() {
+    if(program.skipInit) {
+      console.log("Port successfully opened, skipping init!".bold.green);
+      port.close();
+      if(program.bypass) handleBypass();
+      else if(program.firmware) handleFirmware();
+      else handleExit();
+    }
+    else {
+      console.log("Port is open please reset within 5 seconds!".bold.green);
+      port.set({dtr:true, rts:false, brk:true}, function() {
+        myInterval = setInterval(function() {
           port.write(nullData);
           setTimeout(function() {
-            port.write(carrData);
-          }, 390);
-        }, 415);
-      }, 900);
-      setTimeout(function() {
-        var verBootloader, verApp;
-        
-        console.log('Time is up!'.bold.yellow);
-        buffer = '';
-        clearInterval(myInterval);
-        port.set({brk:false});
-        
-        setTimeout(function() {
-          port.write(carrData);
-          setTimeout(function() {
-            console.log('\n=======\n' + buffer + '\n=======\n');
-            buffer = '';
-            port.write(new Buffer([0x56])); //V
+            port.write(nullData);
             setTimeout(function() {
-              // The bootloader echoes back the commands, thus we substring
-              verBootloader = buffer.substr(1);
-              if(verBootloader.indexOf('BL0') >= 0) {
-                console.log('Bootloader Version: ' + verBootloader.underline.green);
-              }
-              else {
-                console.log('Bootloader Version: ' + verBootloader.underline.yellow);
-              }
-
+              port.write(carrData);
+            }, 390);
+          }, 415);
+        }, 900);
+        setTimeout(function() {
+          var verBootloader, verApp;
+          
+          console.log('Time is up!'.bold.yellow);
+          buffer = '';
+          clearInterval(myInterval);
+          port.set({brk:false});
+          
+          setTimeout(function() {
+            port.write(carrData);
+            setTimeout(function() {
+              console.log('\n=======\n' + buffer + '\n=======\n');
               buffer = '';
-              port.write(new Buffer([0x41])); //A
+              port.write(new Buffer([0x56])); //V
               setTimeout(function() {
-                verApp = buffer.substr(1);
-                if(verApp.indexOf('Unknown') >= 0) {
-                  console.log('Application Version: ' + verApp.underline.yellow);
+                // The bootloader echoes back the commands, thus we substring
+                verBootloader = buffer.substr(1);
+                if(verBootloader.indexOf('BL0') >= 0) {
+                  console.log('Bootloader Version: ' + verBootloader.underline.green);
                 }
                 else {
-                  console.log('Application Version: ' + verApp.underline.green);
+                  console.log('Bootloader Version: ' + verBootloader.underline.yellow);
                 }
+  
                 buffer = '';
-
-                port.close();
-
-                // TODO: We need to check if we got into a bootloader or not before continuing
-                if(program.bypass) handleBypass();
-                else if(program.firmware) handleFirmware();
-                else handleExit();
+                port.write(new Buffer([0x41])); //A
+                setTimeout(function() {
+                  verApp = buffer.substr(1);
+                  if(verApp.indexOf('Unknown') >= 0) {
+                    console.log('Application Version: ' + verApp.underline.yellow);
+                  }
+                  else {
+                    console.log('Application Version: ' + verApp.underline.green);
+                  }
+                  buffer = '';
+  
+                  port.close();
+  
+                  // TODO: We need to check if we got into a bootloader or not before continuing
+                  if(program.bypass) handleBypass();
+                  else if(program.firmware) handleFirmware();
+                  else handleExit();
+                }, 100);
               }, 100);
-            }, 100);
-          }, 500);
-        }, 100);
-      }, 5000);
-    });
+            }, 500);
+          }, 100);
+        }, 5000);
+      });
+    } // End of Init
   });
 }
 else {
@@ -181,10 +197,100 @@ function handleBypass() {
 
 function handleFirmware() {
   console.log('Entering firmware handling!'.underline.green);
+  
+  var Gauge = require("gauge");
+  var gauge = new Gauge();
+  var xmodem = require("xmodem.js");
+  xmodem.block_size = 64; // XBee uses non-standard block size
+  var buffer = fs.readFileSync(program.firmware);
+  var totalBlocks = 0;
+  
+  port = new SerialPort(program.device, {
+    baudRate: parseInt(program.baudrate)
+  });
+  
+  port.once('open', function(){
+    
+    xmodem.once('ready', function(bufferLength) {
+      totalBlocks = bufferLength;
+      // Progress bar + 2 for edges
+      var template = [
+        {type: 'progressbar', length: (bufferLength >= 100 ? 100 : bufferLength) + 2},
+        {type: 'activityIndicator', kerning: 1, length: 1},
+        {type: 'section', kerning: 1, default: ''},
+        {type: 'subsection', kerning: 1, default: ''}
+      ];
+      gauge.setTemplate(template);
+      gauge.setTheme("colorBrailleSpinner");
+      gauge.show("1/" + (Math.floor(bufferLength / 101) + 1), 0);
+      var pulseConfirm = setInterval(function() {
+        gauge.pulse("Ready to send " + bufferLength + " blocks. Press " + "[ENTER]".red + " to start transfer or " + "[CTRL-C]".green + " to cancel!");
+      }, 1000);
+      
+      var stdin = process.stdin;
+      stdin.setRawMode(true);
+      stdin.resume();
+      stdin.setEncoding( 'utf8' );
+
+      var upgradeConfirm = function(key) {
+        // CTRL-C
+        if (key === '\u0003') {
+          handleExit();
+        }
+        else if(key === '\u000d') {
+          clearInterval(pulseConfirm);
+          stdin.removeListener('data', upgradeConfirm);
+          stdin.setRawMode(false);
+          stdin.resume();
+          gauge.pulse("Initiating transmission");
+          // At this stage, we should write F to the port (Bootloader menu for Firmware upgrade);
+          setTimeout(function() {
+            port.write(new Buffer([0x46])); //F
+          }, 1000);
+        }
+        process.stdout.write( key );
+      };
+      
+      stdin.on('data', upgradeConfirm);
+      
+      console.log("WARNING!".underline.yellow + " HERE BE DRAGONS!");
+    });
+    
+    xmodem.once('start', function(mode) {
+      gauge.pulse("Starting transmission mode: " + mode);
+    });
+    
+    xmodem.on('status', function(status) {
+      if(status.action === 'send') {
+        if(status.signal === 'SOH') {
+          gauge.show((Math.floor(status.block / 101) + 1) + '/' + (Math.floor(totalBlocks / 101) + 1),  status.block % 101);
+        }
+        else {
+          gauge.pulse('Sending: ' + status.signal);
+        }
+      }
+      else if(status.action === 'recv') {
+        process.stdout.write('.');
+        gauge.pulse('Received: ' + status.signal)
+      };
+    });
+    
+    xmodem.on('stop', function() {
+      gauge.hide();
+      console.log('Sending completed! Exiting!');
+      handleExit();
+    });
+    
+    xmodem.send(port, buffer);
+  });
+  
 }
 
 function handleExit() {
-  port.close();
+  if(port.readable) {
+    port.close();
+  }
+  process.exit();
 }
 
 exports.VERSION = VERSION;
