@@ -263,14 +263,13 @@ function handleFirmware() {
     xmodem.on('status', function(status) {
       if(status.action === 'send') {
         if(status.signal === 'SOH') {
-          gauge.show((Math.floor(status.block / 101) + 1) + '/' + (Math.floor(totalBlocks / 101) + 1),  status.block % 101);
+          gauge.show((Math.floor(status.block / 101) + 1) + '/' + (Math.floor(totalBlocks / 101) + 1), (status.block % 101) / 100);
         }
         else {
           gauge.pulse('Sending: ' + status.signal);
         }
       }
       else if(status.action === 'recv') {
-        process.stdout.write('.');
         gauge.pulse('Received: ' + status.signal)
       };
     });
