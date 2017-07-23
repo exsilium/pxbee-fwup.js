@@ -7,6 +7,10 @@ within Windows. So for Linux/MacOS alternative tooling is required.
 *NB!* This is still a work-in-progress and no guarantees are given that this software works as intended.
 Feel free to experiment but be careful and use this software only at your own risk!
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/2BP9maFqVWEz2MdN37sb73KE4.png)](https://asciinema.org/a/2BP9maFqVWEz2MdN37sb73KE4)
+
 ## `fwup.js` features:
 
 - Init sequence for the module to boot into Bootloader menu
@@ -17,7 +21,7 @@ Planned featured (TBD):
 
 - Over-the-air firmware upgrade
 
-Expect to work with the following [S2C Modules](https://www.digi.com/products/xbee-rf-solutions/2-4-ghz-modules/xbee-zigbee#partnumbers):
+Expect to work with Programmable S2B modules as well as the following [S2C Modules](https://www.digi.com/products/xbee-rf-solutions/2-4-ghz-modules/xbee-zigbee#partnumbers):
 
 - XB24CZ7PITB003
 - XB24CZ7WITB003
