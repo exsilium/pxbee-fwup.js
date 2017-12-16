@@ -2,7 +2,7 @@
   "name": "pxbee-fwup.js",
   "version": "0.0.1",
   "description": "Programmable XBee Application firmware updater OTW/OTA",
-  "main": "lib/fwup.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,10 +13,6 @@
   "keywords": [
     "xbee"
   ],
-  "bin": {
-    "fwup": "bin/fwup"
-  },
-  "preferGlobal": "true",
   "author": "Sten Feldman",
   "license": "BSD-2-Clause",
   "bugs": {
