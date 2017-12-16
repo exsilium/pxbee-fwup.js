@@ -1,6 +1,6 @@
 # pxbee-fwup.js
 
-A command line utility `fwup.js` for interacting with [Digi](https://www.digi.com)'s XBee radios that are 
+A command line utility `fwup.js` for interacting with [Digi](https://www.digi.com)'s XBee radios that are
 equipped with an 8-bit microcontroller HCS08 for application logic. By default, the provided SDK is only operable
 within Windows. So for Linux/MacOS alternative tooling is required.
 
@@ -11,7 +11,7 @@ Feel free to experiment but be careful and use this software only at your own ri
 
 [![asciicast](https://asciinema.org/a/2BP9maFqVWEz2MdN37sb73KE4.png)](https://asciinema.org/a/2BP9maFqVWEz2MdN37sb73KE4)
 
-## `fwup.js` features:
+## `fwup` features:
 
 - Init sequence for the module to boot into Bootloader menu
 - Going into Bypass mode (in this case the module can be operated as any standard XBee radio)
@@ -39,11 +39,11 @@ Expect to work with Programmable S2B modules as well as the following [S2C Modul
 
 ## Installation
 
-This is still a work in progress so to install, clone this repo and run `npm install`
+`npm install -g .`
 
 ## Usage
 
-Run `./fwup.js --help` for up to date utility options
+Run `fwup --help` for up to date utility options
 
 # Other Projects
 
