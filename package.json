@@ -1,10 +1,11 @@
 {
   "name": "pxbee-fwup.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Programmable XBee Application firmware updater OTW/OTA",
-  "main": "index.js",
+  "main": "lib/fwup.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/**/*spec.js",
+    "lint": "./node_modules/.bin/eslint lib/*.js"
   },
   "repository": {
     "type": "git",
@@ -13,6 +14,10 @@
   "keywords": [
     "xbee"
   ],
+  "bin": {
+    "fwup": "bin/fwup"
+  },
+  "preferGlobal": "true",
   "author": "Sten Feldman",
   "license": "BSD-2-Clause",
   "bugs": {
@@ -22,9 +27,21 @@
   "dependencies": {
     "colors": "~1.1.2",
     "commander": "~2.9.0",
+    "console-stamp": "^0.2.6",
+    "gauge": "~2.7.4",
     "serialport": "~4.0.7",
     "xbee-api": "~0.5.2",
-    "xmodem.js": "~0.0.1",
-    "gauge": "~2.7.4"
+    "xmodem.js": "~0.0.1"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint": "^4.13.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "mocha": "^4.0.1"
   }
 }
